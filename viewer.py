@@ -7,7 +7,7 @@ from termcolor import cprint
 from math import sqrt
 
 outputPixelValues = ['.',':','*',"x","0","#","$"]
-".`^\",:;Il!i~+_-?][}{1)(|\/tfjrxnuvczXYUJCLQ0OZmwqpdbkhao*#MW&8%B@$"
+
 class Size():
     Fit = 1
     Default = 2
@@ -25,6 +25,8 @@ parser.add_argument('-C', action='store_true',
 parser.add_argument('-T', action='store_true',
                     help='Use custom thresholding. Better for images with a lot of similar colour')
 
+# gets the corresponding character to pixel value
+# decides according to threshold values or 0-255 range
 def getPixelChar(value,thresholds=None):
     if (thresholds != None):
         for m in range(len(thresholds)):
@@ -39,7 +41,8 @@ def getPixelChar(value,thresholds=None):
 
 def printPixelGrey(pixRelVal,thresholds):
     print(getPixelChar(pixRelVal,thresholds),end="")
-            
+
+# separate pixel values into n bins with approx same size where n is the number of output chars            
 def thresholdImage(array):
 
     values = {}
@@ -142,7 +145,6 @@ else:
 if (type == Size.Custom and args.S[0] > os.get_terminal_size()[0]):
     print("Width is bigger than windows size! Don't want this to happen, trust me.")
 else:
-    
     img = resizeImg(type,img)
     grey = img.convert('L')
     if (args.C == False):
