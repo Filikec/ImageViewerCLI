@@ -119,9 +119,9 @@ def resizeImg(type,img):
     (w,h) = os.get_terminal_size()
     ratio = img.height/img.width
     if (type == Size.Fit):
-        img = img.resize((w,h))
+        img = img.resize((int(h*2/ratio),h))
     elif (type == Size.Default):
-        img = img.resize((w,int(w*ratio)))
+        img = img.resize((w,int(w*ratio/2)))
     elif (type == Size.Custom):
         img = img.resize(args.S)
     return img
