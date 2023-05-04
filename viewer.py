@@ -24,6 +24,8 @@ parser.add_argument('-C', action='store_true',
                     help='Try to output the image coloured')
 parser.add_argument('-T', action='store_true',
                     help='Use custom thresholding. Better for images with a lot of similar colour')
+parser.add_argument('--no-ascii', action='store_true',
+                    help="Don't use ascii for colour and use coloured bg instead")
 
 # gets the corresponding character to pixel value
 # decides according to threshold values or 0-255 range
@@ -85,7 +87,11 @@ def printPixelColour(pixel,thresholds):
         colour = "black"
     elif (s >= 0.8):
         colour = "white"
-    cprint(char,colour,force_color=True,end="")
+    
+    if (args.no_ascii):
+        cprint(" ",colour,force_color=True,on_color="on_"+colour,end="")
+    else:
+        cprint(char,colour,force_color=True,end="")
 
 def printImage(img):
     (w , _) = os.get_terminal_size()
@@ -132,6 +138,11 @@ def resizeImg(type,img):
 
 
 args = parser.parse_args()
+
+if (args.no_ascii and args.C == False):
+        parser.error('Cannot use --no-ascii without -C flag.')
+if (args.S and args.F):
+        parser.error('Can only use either F or S')
 
 img = Image.open(args.image)
 
