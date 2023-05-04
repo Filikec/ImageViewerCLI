@@ -5,8 +5,8 @@ import colorsys
 from termcolor import cprint
 from math import sqrt
 
-outputPixelValues = ['.',':','*',"+","0","#"]
-
+outputPixelValues = ['.',':','*',"x","0","#","$"]
+".`^\",:;Il!i~+_-?][}{1)(|\/tfjrxnuvczXYUJCLQ0OZmwqpdbkhao*#MW&8%B@$"
 class Size():
     Fit = 1
     Default = 2
@@ -59,10 +59,10 @@ def thresholdImage(array):
     return thresholds
 
 
-def printPixelColour(pixel):
+def printPixelColour(pixel,thresholds):
     (h , s , v) = colorsys.rgb_to_hsv(pixel[0],pixel[1],pixel[2])
     
-    char = getPixelChar(v)
+    char = getPixelChar(v,thresholds)
     colour = "red"
     if (h <= 30/360):
         colour = "red"
@@ -92,7 +92,15 @@ def printImage(img):
 
     thresholds = None
     if (args.T):
-        thresholds = thresholdImage(sorted(list(img.getdata())))
+        if (args.C == False):
+            thresholds = thresholdImage(sorted(list(img.getdata())))
+        else:
+            array = []
+            for p in img.getdata():
+                (_ , _ , v) = colorsys.rgb_to_hsv(p[0],p[1],p[2])
+                array.append(v)
+            thresholds = thresholdImage(sorted(array))
+
 
     for i in range(img.height):
         for j in range(img.width+wDif):
@@ -101,7 +109,7 @@ def printImage(img):
             else:
                 pixel = img.getpixel((j-wDif,i))
                 if (args.C):
-                    printPixelColour(pixel)
+                    printPixelColour(pixel,thresholds)
                 else:
                     printPixelGrey(pixel,thresholds)
         print()
