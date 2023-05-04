@@ -81,7 +81,7 @@ def printPixelColour(pixel,thresholds):
     else:
         colour = "magenta"
     
-    if (s <= 0.3):
+    if (s <= 0.05):
         colour = "black"
     elif (s >= 0.8):
         colour = "white"
