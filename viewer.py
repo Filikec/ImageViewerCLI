@@ -21,34 +21,67 @@ parser.add_argument('-S', nargs = 2, type=int,
                     help='Scale the image to custom size (width, height)')
 parser.add_argument('-C', action='store_true',
                     help='Try to output the image coloured')
-def getPixelChar(value):
+parser.add_argument('-T', action='store_true',
+                    help='Use custom thresholding. Better for images with a lot of similar colour')
+
+def getPixelChar(value,thresholds=None):
+    if (thresholds != None):
+        for m in range(len(thresholds)):
+            if (value <= thresholds[m]):
+                return outputPixelValues[m]
+            
     size = len(outputPixelValues)
+    
     for p in range(size):
         if (255/(size-p) >= value):
             return(outputPixelValues[size-1-p])
 
-def printPixelGrey(pixRelVal):
-    print(getPixelChar(pixRelVal),end="")
+def printPixelGrey(pixRelVal,thresholds):
+    print(getPixelChar(pixRelVal,thresholds),end="")
             
+def thresholdImage(array):
+
+    values = {}
+    
+    for p in array:
+        if (p in values):
+            values[p] += 1
+        else:
+            values[p] = 1
+
+    thresholds = []
+    curSum = 0
+    for v in dict(sorted(values.items())):
+        curSum += values[v]
+        if (curSum > len(img.getdata())/len(outputPixelValues)):
+            curSum = 0
+            thresholds.append(v)
+    return thresholds
+
 
 def printPixelColour(pixel):
-    (_ , _ , v) = colorsys.rgb_to_hsv(pixel[0],pixel[1],pixel[2])
-    colours = {"red" : [255,0,0], "green" : [0,255,0], "blue" : [0,0,255],"yellow": [255,255,0], "cyan" : [0,255,255],"magenta" : [255,0,255], "black" : [0,0,0], "white" : [255,255,255]}
+    (h , s , v) = colorsys.rgb_to_hsv(pixel[0],pixel[1],pixel[2])
     
     char = getPixelChar(v)
+    colour = "red"
+    if (h <= 30/360):
+        colour = "red"
+    elif (h <= 70/360):
+        colour = "yellow"
+    elif (h <= 160/360):
+        colour = "green"
+    elif (h <=200/360):
+        colour = "cyan"
+    elif (h <= 280/360):
+        colour = "blue"
+    else:
+        colour = "magenta"
     
-    bestC = "black"
-    least = 16581375
-    for colour in colours:
-        x = pixel[0] - colours[colour][0]
-        y = pixel[1] - colours[colour][1]
-        z = pixel[2] - colours[colour][2]
-        dist = sqrt(x*x+y*y+z*z)
-        if (dist < least):
-            least = dist
-            bestC = colour
-
-    cprint(char,bestC,force_color=True,end="")
+    if (s <= 0.3):
+        colour = "black"
+    elif (s >= 0.8):
+        colour = "white"
+    cprint(char,colour,force_color=True,end="")
 
 def printImage(img):
     (w , _) = os.get_terminal_size()
@@ -56,7 +89,11 @@ def printImage(img):
     if (wDif < 0):
         wDif = 0
     wDif //= 2
-    img = img.convert()
+
+    thresholds = None
+    if (args.T):
+        thresholds = thresholdImage(sorted(list(img.getdata())))
+
     for i in range(img.height):
         for j in range(img.width+wDif):
             if (j < wDif):
@@ -66,7 +103,7 @@ def printImage(img):
                 if (args.C):
                     printPixelColour(pixel)
                 else:
-                    printPixelGrey(pixel)
+                    printPixelGrey(pixel,thresholds)
         print()
 
 def resizeImg(type,img):
@@ -96,6 +133,7 @@ else:
 if (type == Size.Custom and args.S[0] > os.get_terminal_size()[0]):
     print("Width is bigger than windows size! Don't want this to happen, trust me.")
 else:
+    
     img = resizeImg(type,img)
     grey = img.convert('L')
     if (args.C == False):
