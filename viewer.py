@@ -1,13 +1,13 @@
 #!/usr/bin/env python
-from PIL import Image
+from PIL import Image, ImageFilter
 import os
 import argparse
 import colorsys
 from termcolor import cprint
 from math import sqrt
 
-outputPixelValues = ['.',':','*',"x","0","#","$"]
-
+outputPixelValues = ['.',':','"','*',"x","X","#","$","@"]
+# ['.',':','*',"x","X","#","$","@"]
 class Size():
     Fit = 1
     Default = 2
@@ -26,6 +26,9 @@ parser.add_argument('-T', action='store_true',
                     help='Use custom thresholding. Better for images with a lot of similar colour')
 parser.add_argument('--no-ascii', action='store_true',
                     help="Don't use ascii for colour and use coloured bg instead")
+parser.add_argument('-E', action='store_true',
+                    help='Draw edges from the image instead')
+
 
 # gets the corresponding character to pixel value
 # decides according to threshold values or 0-255 range
@@ -39,10 +42,10 @@ def getPixelChar(value,thresholds=None):
     
     for p in range(size):
         if (255/(size-p) >= value):
-            return(outputPixelValues[size-1-p])
+            return(outputPixelValues[p])
 
-def printPixelGrey(pixRelVal,thresholds):
-    print(getPixelChar(pixRelVal,thresholds),end="")
+def printPixelGrey(pixel,thresholds):
+    print(getPixelChar(pixel,thresholds),end="")
 
 # separate pixel values into n bins with approx same size where n is the number of output chars            
 def thresholdImage(array):
@@ -60,6 +63,7 @@ def thresholdImage(array):
     for v in dict(sorted(values.items())):
         curSum += values[v]
         if (curSum > len(img.getdata())/len(outputPixelValues)):
+            print(curSum)
             curSum = 0
             thresholds.append(v)
     return thresholds
@@ -144,7 +148,8 @@ if (args.no_ascii and args.C == False):
 if (args.S and args.F):
         parser.error('Can only use either F or S')
 
-img = Image.open(args.image)
+originalImage = Image.open(args.image)
+greyImage = originalImage.convert('L')
 
 if (args.F):
     type = Size.Fit
@@ -156,10 +161,11 @@ else:
 if (type == Size.Custom and args.S[0] > os.get_terminal_size()[0]):
     print("Width is bigger than windows size! Don't want this to happen, trust me.")
 else:
-    img = resizeImg(type,img)
-    grey = img.convert('L')
+    img = resizeImg(type,originalImage)
     if (args.C == False):
-        img = grey
+        img = resizeImg(type,greyImage)
+    if (args.E):
+        img = resizeImg(type,greyImage).filter(ImageFilter.FIND_EDGES)
     printImage(img)
 
 
