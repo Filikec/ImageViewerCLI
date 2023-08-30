@@ -63,7 +63,6 @@ def thresholdImage(array):
     for v in dict(sorted(values.items())):
         curSum += values[v]
         if (curSum > len(img.getdata())/len(outputPixelValues)):
-            print(curSum)
             curSum = 0
             thresholds.append(v)
     return thresholds
@@ -132,14 +131,16 @@ def resizeImg(type,img):
     (w,h) = os.get_terminal_size()
     ratio = img.height/img.width
     if (type == Size.Fit):
-        img = img.resize((int(h*2/ratio),h))
+        newW = int(h*2/ratio)
+        if (newW > w):
+            img = img.resize((w,int(ratio*w/2)))
+        else:
+            img = img.resize((newW,h))
     elif (type == Size.Default):
         img = img.resize((w,int(w*ratio/2)))
     elif (type == Size.Custom):
         img = img.resize(args.S)
     return img
-
-
 
 args = parser.parse_args()
 
@@ -158,15 +159,13 @@ elif(args.S != None):
 else:
     type = Size.Default
 
-if (type == Size.Custom and args.S[0] > os.get_terminal_size()[0]):
-    print("Width is bigger than windows size! Don't want this to happen, trust me.")
-else:
-    img = resizeImg(type,originalImage)
-    if (args.C == False):
-        img = resizeImg(type,greyImage)
-    if (args.E):
-        img = resizeImg(type,greyImage).filter(ImageFilter.FIND_EDGES)
-    printImage(img)
+
+img = resizeImg(type,originalImage)
+if (args.C == False):
+    img = resizeImg(type,greyImage)
+if (args.E):
+    img = resizeImg(type,greyImage).filter(ImageFilter.FIND_EDGES)
+printImage(img)
 
 
     
